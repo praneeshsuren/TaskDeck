@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TaskDeck.Application.Interfaces;
+using TaskDeck.Infrastructure.Authentication;
 using TaskDeck.Infrastructure.Persistence;
 using TaskDeck.Infrastructure.Repositories;
 using TaskDeck.Infrastructure.Services;
@@ -29,10 +30,14 @@ public static class DependencyInjection
         // Add repositories
         services.AddScoped<ITaskRepository, TaskRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IProjectRepository, ProjectRepository>();
 
         // Add services
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 
         return services;
     }
 }
+

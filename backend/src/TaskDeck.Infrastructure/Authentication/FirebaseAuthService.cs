@@ -3,16 +3,17 @@ using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using TaskDeck.Application.Interfaces;
 
 namespace TaskDeck.Infrastructure.Authentication;
 
 /// <summary>
 /// Service for Firebase authentication operations
 /// </summary>
-public class FirebaseAuthService
+public class FirebaseAuthService : IFirebaseAuthService
 {
     private readonly ILogger<FirebaseAuthService> _logger;
-    private readonly FirebaseAuth _firebaseAuth;
+    private readonly FirebaseAuth? _firebaseAuth;
 
     public FirebaseAuthService(IConfiguration configuration, ILogger<FirebaseAuthService> logger)
     {
@@ -29,19 +30,40 @@ public class FirebaseAuthService
                     Credential = GoogleCredential.FromFile(credentialsPath)
                 });
             }
+            _firebaseAuth = FirebaseAuth.DefaultInstance;
         }
-
-        _firebaseAuth = FirebaseAuth.DefaultInstance;
+        else
+        {
+            _logger.LogWarning("Firebase credentials not found. Firebase authentication will not work.");
+            _firebaseAuth = null;
+        }
     }
 
     /// <summary>
-    /// Verify a Firebase ID token
+    /// Verify a Firebase ID token and return token info
     /// </summary>
-    public async Task<FirebaseToken?> VerifyIdTokenAsync(string idToken)
+    public async Task<FirebaseTokenInfo?> VerifyIdTokenAsync(string idToken)
     {
+        if (_firebaseAuth == null)
+        {
+            _logger.LogError("Firebase Auth is not initialized");
+            return null;
+        }
+
         try
         {
-            return await _firebaseAuth.VerifyIdTokenAsync(idToken);
+            var decodedToken = await _firebaseAuth.VerifyIdTokenAsync(idToken);
+            
+            // Get user record for additional info
+            var userRecord = await _firebaseAuth.GetUserAsync(decodedToken.Uid);
+            
+            return new FirebaseTokenInfo
+            {
+                Uid = decodedToken.Uid,
+                Email = userRecord.Email ?? "",
+                DisplayName = userRecord.DisplayName,
+                PhotoUrl = userRecord.PhotoUrl
+            };
         }
         catch (Exception ex)
         {
@@ -49,20 +71,5 @@ public class FirebaseAuthService
             return null;
         }
     }
-
-    /// <summary>
-    /// Get user info from Firebase by UID
-    /// </summary>
-    public async Task<UserRecord?> GetUserAsync(string uid)
-    {
-        try
-        {
-            return await _firebaseAuth.GetUserAsync(uid);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get Firebase user: {Uid}", uid);
-            return null;
-        }
-    }
 }
+

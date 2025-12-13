@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using TaskDeck.Application.Interfaces;
 using TaskDeck.Domain.Entities;
 
 namespace TaskDeck.Infrastructure.Authentication;
@@ -10,7 +11,7 @@ namespace TaskDeck.Infrastructure.Authentication;
 /// <summary>
 /// Service for JWT token generation and validation
 /// </summary>
-public class JwtService
+public class JwtService : IJwtService
 {
     private readonly IConfiguration _configuration;
     private readonly string _secretKey;
@@ -25,6 +26,14 @@ public class JwtService
         _issuer = configuration["Jwt:Issuer"] ?? "TaskDeck";
         _audience = configuration["Jwt:Audience"] ?? "TaskDeck";
         _expirationMinutes = int.Parse(configuration["Jwt:ExpirationInMinutes"] ?? "60");
+    }
+
+    /// <summary>
+    /// Get the expiration time for new tokens
+    /// </summary>
+    public DateTime GetTokenExpiration()
+    {
+        return DateTime.UtcNow.AddMinutes(_expirationMinutes);
     }
 
     /// <summary>

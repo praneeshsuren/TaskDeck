@@ -22,6 +22,7 @@ export default function AuthCallbackPage() {
         setError(null);
         try {
             await signInWithGoogle();
+            // Navigate to dashboard after successful sign-in
             router.push('/dashboard');
         } catch (err) {
             console.error('Auth error:', err);

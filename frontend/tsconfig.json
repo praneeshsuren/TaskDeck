@@ -44,7 +44,6 @@
                 "./src/utils/*"
             ]
         },
-        "baseUrl": "."
     },
     "include": [
         "next-env.d.ts",

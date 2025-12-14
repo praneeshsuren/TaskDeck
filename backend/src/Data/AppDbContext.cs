@@ -3,9 +3,6 @@ using TaskDeck.Api.Models;
 
 namespace TaskDeck.Api.Data;
 
-/// <summary>
-/// Entity Framework DbContext for TaskDeck
-/// </summary>
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)

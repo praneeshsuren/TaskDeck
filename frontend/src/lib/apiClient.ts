@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { auth } from './firebaseClient';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -12,15 +11,11 @@ export const apiClient = axios.create({
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
-    async (config) => {
-        try {
-            const user = auth.currentUser;
-            if (user) {
-                const token = await user.getIdToken();
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-        } catch (error) {
-            console.error('Error getting auth token:', error);
+    (config) => {
+        // Use the JWT token from localStorage (set after backend auth)
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
@@ -34,8 +29,11 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Handle unauthorized - redirect to login
-            window.location.href = '/auth/callback';
+            // Clear invalid tokens
+            localStorage.removeItem('token');
+            localStorage.removeItem('tokenExpiry');
+            // Don't redirect - just reject the error and let the component handle it
+            console.error('Unauthorized - token may be expired');
         }
         return Promise.reject(error);
     }

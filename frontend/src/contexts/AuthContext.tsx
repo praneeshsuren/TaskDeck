@@ -76,8 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 if (result?.user) {
                     // User just signed in via redirect, authenticate with backend
                     await authenticateWithBackend(result.user);
-                    // Redirect to dashboard after successful sign-in
-                    window.location.href = '/dashboard';
+                    // Don't redirect here - onAuthStateChanged will handle the user state
                 }
             } catch (error) {
                 console.error('Error handling redirect result:', error);
@@ -99,19 +98,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     avatarUrl: firebaseUser.photoURL,
                 });
                 
-                // If we don't have a token, get one from the backend
+                // If we don't have a valid token, get one from the backend
                 const existingToken = localStorage.getItem('token');
-                if (!existingToken) {
+                const tokenExpiry = localStorage.getItem('tokenExpiry');
+                const isTokenValid = existingToken && tokenExpiry && new Date(tokenExpiry) > new Date();
+                
+                if (!isTokenValid) {
                     try {
                         await authenticateWithBackend(firebaseUser);
                     } catch (error) {
                         console.error('Failed to authenticate with backend:', error);
-                        setAuthError('Failed to authenticate with server.');
+                        // Don't set error - just log it, user is still logged in via Firebase
                     }
                 }
             } else {
                 setFirebaseUser(null);
                 setUser(null);
+                localStorage.removeItem('token');
+                localStorage.removeItem('tokenExpiry');
             }
             setLoading(false);
         });

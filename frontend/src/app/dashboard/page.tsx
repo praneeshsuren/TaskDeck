@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
 import { TaskCard } from '@/components/TaskCard';
+import { api } from '@/lib/apiClient';
 import { Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import type { Task, Project } from '@/types/todo';
 
@@ -14,10 +15,20 @@ export default function DashboardPage() {
     const [recentTasks, setRecentTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // TODO: Fetch projects and tasks from API
-        setLoading(false);
+    const fetchProjects = useCallback(async () => {
+        try {
+            const response = await api.getProjects();
+            setProjects(response.data);
+        } catch (error) {
+            console.error('Failed to fetch projects:', error);
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchProjects();
+    }, [fetchProjects]);
 
     const stats = {
         total: recentTasks.length,
@@ -30,7 +41,7 @@ export default function DashboardPage() {
 
     return (
         <div className="flex h-[calc(100vh-64px)]">
-            <ProjectSidebar projects={projects} />
+            <ProjectSidebar projects={projects} onProjectCreated={fetchProjects} />
 
             <div className="flex-1 overflow-auto p-6">
                 <div className="max-w-6xl mx-auto">

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TaskDeck.Api.Data;
-using TaskDeck.Api.Hubs;
 using TaskDeck.Api.Middleware;
 using TaskDeck.Api.Services;
 
@@ -16,9 +15,6 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new() { Title = "TaskDeck API", Version = "v1" });
 });
-
-// Add SignalR
-builder.Services.AddSignalR();
 
 // Add Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -48,21 +44,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"] ?? "TaskDeckUsers",
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
-        };
-
-        // Configure SignalR to work with JWT
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accessToken = context.Request.Query["access_token"];
-                var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                {
-                    context.Token = accessToken;
-                }
-                return Task.CompletedTask;
-            }
         };
     });
 
@@ -100,7 +81,6 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = Dat
    .WithName("HealthCheck");
 
 app.MapControllers();
-app.MapHub<TasksHub>("/hubs/tasks");
 
 app.Run();
 

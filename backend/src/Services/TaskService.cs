@@ -17,13 +17,27 @@ public class TaskService
     }
 
     /// <summary>
+    /// Check if user has access to a project (owner or member)
+    /// </summary>
+    private async Task<bool> UserHasProjectAccessAsync(Guid projectId, Guid userId)
+    {
+        var project = await _db.Projects
+            .Include(p => p.Members)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+
+        if (project == null) return false;
+
+        return project.OwnerId == userId || project.Members.Any(m => m.UserId == userId);
+    }
+
+    /// <summary>
     /// Get all tasks in a project
     /// </summary>
     public async Task<List<TaskItemDto>> GetTasksByProjectAsync(Guid projectId, Guid userId)
     {
-        // Verify user owns the project
-        var projectExists = await _db.Projects.AnyAsync(p => p.Id == projectId && p.OwnerId == userId);
-        if (!projectExists) return new List<TaskItemDto>();
+        // Verify user has access to the project (owner or member)
+        var hasAccess = await UserHasProjectAccessAsync(projectId, userId);
+        if (!hasAccess) return new List<TaskItemDto>();
 
         return await _db.Tasks
             .Include(t => t.AssignedTo)
@@ -64,8 +78,12 @@ public class TaskService
     /// <summary>
     /// Create a new task
     /// </summary>
-    public async Task<TaskItemDto> CreateTaskAsync(CreateTaskDto dto, Guid userId)
+    public async Task<TaskItemDto?> CreateTaskAsync(CreateTaskDto dto, Guid userId)
     {
+        // Verify user has access to the project
+        var hasAccess = await UserHasProjectAccessAsync(dto.ProjectId, userId);
+        if (!hasAccess) return null;
+
         var maxOrder = await _db.Tasks
             .Where(t => t.ProjectId == dto.ProjectId)
             .MaxAsync(t => (int?)t.Order) ?? 0;
@@ -117,11 +135,16 @@ public class TaskService
     {
         var task = await _db.Tasks
             .Include(t => t.Project)
+                .ThenInclude(p => p.Members)
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy)
-            .FirstOrDefaultAsync(t => t.Id == id && t.Project.OwnerId == userId);
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task == null) return null;
+
+        // Check if user has access (owner or member)
+        bool hasAccess = task.Project.OwnerId == userId || task.Project.Members.Any(m => m.UserId == userId);
+        if (!hasAccess) return null;
 
         if (dto.Title != null) task.Title = dto.Title;
         if (dto.Description != null) task.Description = dto.Description;
@@ -176,9 +199,14 @@ public class TaskService
     {
         var task = await _db.Tasks
             .Include(t => t.Project)
-            .FirstOrDefaultAsync(t => t.Id == id && t.Project.OwnerId == userId);
+                .ThenInclude(p => p.Members)
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task == null) return false;
+
+        // Check if user has access (owner or member)
+        bool hasAccess = task.Project.OwnerId == userId || task.Project.Members.Any(m => m.UserId == userId);
+        if (!hasAccess) return false;
 
         _db.Tasks.Remove(task);
         await _db.SaveChangesAsync();
@@ -194,12 +222,18 @@ public class TaskService
         {
             var task = await _db.Tasks
                 .Include(t => t.Project)
-                .FirstOrDefaultAsync(t => t.Id == item.Id && t.Project.OwnerId == userId);
+                    .ThenInclude(p => p.Members)
+                .FirstOrDefaultAsync(t => t.Id == item.Id);
 
             if (task != null)
             {
-                task.Order = item.Order;
-                task.UpdatedAt = DateTime.UtcNow;
+                // Check if user has access (owner or member)
+                bool hasAccess = task.Project.OwnerId == userId || task.Project.Members.Any(m => m.UserId == userId);
+                if (hasAccess)
+                {
+                    task.Order = item.Order;
+                    task.UpdatedAt = DateTime.UtcNow;
+                }
             }
         }
 

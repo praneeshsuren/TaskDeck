@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using TaskDeck.Api.Hubs;
 using TaskDeck.Api.Models;
 using TaskDeck.Api.Services;
 
@@ -16,16 +14,13 @@ namespace TaskDeck.Api.Controllers;
 public class TasksController : ControllerBase
 {
     private readonly TaskService _taskService;
-    private readonly IHubContext<TasksHub> _hubContext;
     private readonly ILogger<TasksController> _logger;
 
     public TasksController(
         TaskService taskService,
-        IHubContext<TasksHub> hubContext,
         ILogger<TasksController> logger)
     {
         _taskService = taskService;
-        _hubContext = hubContext;
         _logger = logger;
     }
 
@@ -57,9 +52,8 @@ public class TasksController : ControllerBase
         request.ProjectId = projectId;
         var result = await _taskService.CreateTaskAsync(request, userId);
         
-        // Notify clients via SignalR
-        await _hubContext.Clients.Group($"project-{projectId}")
-            .SendAsync("TaskCreated", result);
+        if (result == null)
+            return Forbid();
         
         _logger.LogInformation("Task {TaskId} created in project {ProjectId}", result.Id, projectId);
         return CreatedAtAction(nameof(GetTasksByProject), new { projectId }, result);
@@ -76,10 +70,6 @@ public class TasksController : ControllerBase
 
         if (result == null)
             return NotFound(new { message = "Task not found" });
-
-        // Notify clients via SignalR
-        await _hubContext.Clients.Group($"project-{result.ProjectId}")
-            .SendAsync("TaskUpdated", result);
 
         _logger.LogInformation("Task {TaskId} updated", id);
         return Ok(result);

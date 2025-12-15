@@ -10,6 +10,29 @@ import { api } from '@/lib/apiClient';
 import { Plus, Search, Filter, ArrowLeft, UserPlus } from 'lucide-react';
 import type { Task, Project } from '@/types/todo';
 
+// Helper to map numeric enum values to strings
+const statusMap: Record<number, string> = {
+    0: 'Todo',
+    1: 'InProgress',
+    2: 'InReview',
+    3: 'Done',
+    4: 'Cancelled'
+};
+const priorityMap: Record<number, string> = {
+    0: 'Low',
+    1: 'Medium',
+    2: 'High',
+    3: 'Urgent'
+};
+
+function transformTask(task: any): Task {
+    return {
+        ...task,
+        status: typeof task.status === 'number' ? statusMap[task.status] : task.status,
+        priority: typeof task.priority === 'number' ? priorityMap[task.priority] : task.priority,
+    };
+}
+
 export default function ProjectTasksPage() {
     const params = useParams();
     const projectId = params.id as string;
@@ -36,21 +59,6 @@ export default function ProjectTasksPage() {
 
         setLoading(true);
         try {
-            // Map numeric values to string values for status and priority
-            const statusMap: Record<number, string> = {
-                0: 'Todo',
-                1: 'InProgress',
-                2: 'InReview',
-                3: 'Done',
-                4: 'Cancelled'
-            };
-            const priorityMap: Record<number, string> = {
-                0: 'Low',
-                1: 'Medium',
-                2: 'High',
-                3: 'Urgent'
-            };
-
             const [projectRes, tasksRes] = await Promise.all([
                 api.getProject(projectId),
                 api.getTasks(projectId)
@@ -58,11 +66,7 @@ export default function ProjectTasksPage() {
             setProject(projectRes.data);
             
             // Transform tasks to use string status/priority
-            const transformedTasks = tasksRes.data.map((task: Task & { status: number | string; priority: number | string }) => ({
-                ...task,
-                status: typeof task.status === 'number' ? statusMap[task.status] : task.status,
-                priority: typeof task.priority === 'number' ? priorityMap[task.priority] : task.priority,
-            }));
+            const transformedTasks = tasksRes.data.map(transformTask);
             setTasks(transformedTasks);
         } catch (error) {
             console.error('Failed to fetch project data:', error);

@@ -3,9 +3,6 @@ using System.Text.Json;
 
 namespace TaskDeck.Api.Middleware;
 
-/// <summary>
-/// Global error handling middleware
-/// </summary>
 public class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;

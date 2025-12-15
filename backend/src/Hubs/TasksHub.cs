@@ -2,9 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace TaskDeck.Api.Hubs;
 
-/// <summary>
 /// SignalR hub for real-time task updates
-/// </summary>
 public class TasksHub : Hub
 {
     private readonly ILogger<TasksHub> _logger;

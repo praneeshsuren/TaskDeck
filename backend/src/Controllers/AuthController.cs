@@ -4,9 +4,6 @@ using TaskDeck.Api.Services;
 
 namespace TaskDeck.Api.Controllers;
 
-/// <summary>
-/// Controller for authentication endpoints
-/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase
@@ -20,9 +17,6 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Login with Firebase ID token
-    /// </summary>
     [HttpPost("firebase")]
     public async Task<IActionResult> LoginWithFirebase([FromBody] FirebaseLoginRequest request)
     {

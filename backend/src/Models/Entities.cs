@@ -1,8 +1,5 @@
 namespace TaskDeck.Api.Models;
 
-/// <summary>
-/// Represents an application user
-/// </summary>
 public class AppUser
 {
     public Guid Id { get; set; }
@@ -15,15 +12,11 @@ public class AppUser
     public DateTime? UpdatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
 
-    // Navigation properties
     public virtual ICollection<Project> OwnedProjects { get; set; } = new List<Project>();
     public virtual ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
     public virtual ICollection<TaskItem> CreatedTasks { get; set; } = new List<TaskItem>();
 }
 
-/// <summary>
-/// Represents a project that contains tasks
-/// </summary>
 public class Project
 {
     public Guid Id { get; set; }
@@ -35,17 +28,13 @@ public class Project
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
-    // Foreign keys
+
     public Guid OwnerId { get; set; }
 
-    // Navigation properties
     public virtual AppUser Owner { get; set; } = null!;
     public virtual ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
 }
 
-/// <summary>
-/// Represents a task item within a project
-/// </summary>
 public class TaskItem
 {
     public Guid Id { get; set; }
@@ -59,20 +48,17 @@ public class TaskItem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
-    // Foreign keys
+
     public Guid ProjectId { get; set; }
     public Guid CreatedById { get; set; }
     public Guid? AssignedToId { get; set; }
 
-    // Navigation properties
+
     public virtual Project Project { get; set; } = null!;
     public virtual AppUser CreatedBy { get; set; } = null!;
     public virtual AppUser? AssignedTo { get; set; }
 }
 
-/// <summary>
-/// Task status enumeration
-/// </summary>
 public enum TaskItemStatus
 {
     Todo = 0,
@@ -82,9 +68,6 @@ public enum TaskItemStatus
     Cancelled = 4
 }
 
-/// <summary>
-/// Task priority enumeration
-/// </summary>
 public enum TaskPriority
 {
     Low = 0,

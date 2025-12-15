@@ -65,27 +65,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add CORS - configured for SignalR which requires credentials
+// Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
                 "http://localhost:3000",
-                "http://localhost:3001",
-                "https://taskdeck.com"
+                "http://localhost:3001"
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
-    });
-    
-    // Keep a permissive policy for development
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
     });
 });
 
@@ -99,17 +90,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
-
-// Use appropriate CORS policy
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors("AllowAll");
-}
-else
-{
-    app.UseCors("AllowFrontend");
-}
-
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 

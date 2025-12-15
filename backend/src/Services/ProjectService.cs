@@ -17,14 +17,31 @@ public class ProjectService
     }
 
     /// <summary>
-    /// Get all projects for a user
+    /// Get all projects for a user (owned + member)
     /// </summary>
     public async Task<List<ProjectDto>> GetProjectsAsync(Guid userId)
     {
-        return await _db.Projects
+        // Get projects where user is owner
+        var ownedProjects = await _db.Projects
             .Include(p => p.Owner)
             .Include(p => p.Tasks)
             .Where(p => p.OwnerId == userId && !p.IsArchived)
+            .ToListAsync();
+
+        // Get projects where user is a member
+        var memberProjects = await _db.ProjectMembers
+            .Include(pm => pm.Project)
+                .ThenInclude(p => p.Owner)
+            .Include(pm => pm.Project)
+                .ThenInclude(p => p.Tasks)
+            .Where(pm => pm.UserId == userId && !pm.Project.IsArchived)
+            .Select(pm => pm.Project)
+            .ToListAsync();
+
+        // Combine and order by CreatedAt
+        var allProjects = ownedProjects
+            .Concat(memberProjects)
+            .DistinctBy(p => p.Id)
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new ProjectDto
             {
@@ -36,6 +53,7 @@ public class ProjectService
                 IsArchived = p.IsArchived,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
+                IsOwner = p.OwnerId == userId,
                 Owner = new UserDto
                 {
                     Id = p.Owner.Id,
@@ -45,20 +63,28 @@ public class ProjectService
                 },
                 TaskCount = p.Tasks.Count
             })
-            .ToListAsync();
+            .ToList();
+
+        return allProjects;
     }
 
     /// <summary>
-    /// Get a project by ID
+    /// Get a project by ID (accessible by owner or members)
     /// </summary>
     public async Task<ProjectDto?> GetProjectByIdAsync(Guid id, Guid userId)
     {
         var project = await _db.Projects
             .Include(p => p.Owner)
             .Include(p => p.Tasks)
-            .FirstOrDefaultAsync(p => p.Id == id && p.OwnerId == userId);
+            .Include(p => p.Members)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
         if (project == null) return null;
+
+        // Check if user is owner or member
+        bool isOwner = project.OwnerId == userId;
+        bool isMember = project.Members.Any(m => m.UserId == userId);
+        if (!isOwner && !isMember) return null;
 
         return new ProjectDto
         {
@@ -70,6 +96,7 @@ public class ProjectService
             IsArchived = project.IsArchived,
             CreatedAt = project.CreatedAt,
             UpdatedAt = project.UpdatedAt,
+            IsOwner = isOwner,
             Owner = new UserDto
             {
                 Id = project.Owner.Id,

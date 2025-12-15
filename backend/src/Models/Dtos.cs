@@ -39,6 +39,7 @@ public class ProjectDto
     public DateTime? UpdatedAt { get; set; }
     public UserDto Owner { get; set; } = null!;
     public int TaskCount { get; set; }
+    public bool IsOwner { get; set; } = true;
 }
 
 public class CreateProjectDto
@@ -108,4 +109,32 @@ public class TaskOrderItem
 {
     public Guid Id { get; set; }
     public int Order { get; set; }
+}
+
+// ==================== Invitation DTOs ====================
+
+public class InvitationDto
+{
+    public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+    public string ProjectName { get; set; } = string.Empty;
+    public string? ProjectColor { get; set; }
+    public UserDto InvitedUser { get; set; } = null!;
+    public UserDto InvitedBy { get; set; } = null!;
+    public InvitationStatus Status { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class SendInvitationDto
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+public class ProjectMemberDto
+{
+    public Guid Id { get; set; }
+    public UserDto User { get; set; } = null!;
+    public ProjectRole Role { get; set; }
+    public DateTime JoinedAt { get; set; }
+    public bool IsOwner { get; set; }
 }

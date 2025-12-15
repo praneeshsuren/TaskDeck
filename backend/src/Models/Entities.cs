@@ -13,8 +13,11 @@ public class AppUser
     public DateTime? LastLoginAt { get; set; }
 
     public virtual ICollection<Project> OwnedProjects { get; set; } = new List<Project>();
+    public virtual ICollection<ProjectMember> ProjectMemberships { get; set; } = new List<ProjectMember>();
     public virtual ICollection<TaskItem> AssignedTasks { get; set; } = new List<TaskItem>();
     public virtual ICollection<TaskItem> CreatedTasks { get; set; } = new List<TaskItem>();
+    public virtual ICollection<Invitation> ReceivedInvitations { get; set; } = new List<Invitation>();
+    public virtual ICollection<Invitation> SentInvitations { get; set; } = new List<Invitation>();
 }
 
 public class Project
@@ -33,6 +36,54 @@ public class Project
 
     public virtual AppUser Owner { get; set; } = null!;
     public virtual ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
+    public virtual ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
+    public virtual ICollection<Invitation> Invitations { get; set; } = new List<Invitation>();
+}
+
+/// <summary>
+/// Many-to-many relationship between users and projects
+/// </summary>
+public class ProjectMember
+{
+    public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+    public Guid UserId { get; set; }
+    public ProjectRole Role { get; set; } = ProjectRole.Member;
+    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+
+    public virtual Project Project { get; set; } = null!;
+    public virtual AppUser User { get; set; } = null!;
+}
+
+/// <summary>
+/// Invitation to join a project
+/// </summary>
+public class Invitation
+{
+    public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
+    public Guid InvitedUserId { get; set; }
+    public Guid InvitedByUserId { get; set; }
+    public InvitationStatus Status { get; set; } = InvitationStatus.Pending;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? RespondedAt { get; set; }
+
+    public virtual Project Project { get; set; } = null!;
+    public virtual AppUser InvitedUser { get; set; } = null!;
+    public virtual AppUser InvitedByUser { get; set; } = null!;
+}
+
+public enum ProjectRole
+{
+    Member = 0,
+    Admin = 1
+}
+
+public enum InvitationStatus
+{
+    Pending = 0,
+    Accepted = 1,
+    Declined = 2
 }
 
 public class TaskItem

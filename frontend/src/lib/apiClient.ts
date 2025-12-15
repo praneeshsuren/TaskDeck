@@ -61,4 +61,10 @@ export const api = {
     // Users
     getCurrentUser: () => apiClient.get('/api/users/me'),
     updateProfile: (data: unknown) => apiClient.put('/api/users/me', data),
+
+    // Invitations
+    getInvitations: () => apiClient.get('/api/invitations'),
+    acceptInvitation: (invitationId: string) => apiClient.post(`/api/invitations/${invitationId}/accept`),
+    declineInvitation: (invitationId: string) => apiClient.post(`/api/invitations/${invitationId}/decline`),
+    sendInvitation: (projectId: string, email: string) => apiClient.post(`/api/projects/${projectId}/invitations`, { email }),
 };

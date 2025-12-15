@@ -12,6 +12,8 @@ public class AppDbContext : DbContext
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +46,49 @@ public class AppDbContext : DbContext
                 .WithMany(u => u.OwnedProjects)
                 .HasForeignKey(e => e.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ProjectMember configuration
+        modelBuilder.Entity<ProjectMember>(entity =>
+        {
+            entity.ToTable("project_members");
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Project)
+                .WithMany(p => p.Members)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.ProjectMemberships)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.ProjectId, e.UserId }).IsUnique();
+        });
+
+        // Invitation configuration
+        modelBuilder.Entity<Invitation>(entity =>
+        {
+            entity.ToTable("invitations");
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Project)
+                .WithMany(p => p.Invitations)
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.InvitedUser)
+                .WithMany(u => u.ReceivedInvitations)
+                .HasForeignKey(e => e.InvitedUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.InvitedByUser)
+                .WithMany(u => u.SentInvitations)
+                .HasForeignKey(e => e.InvitedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.ProjectId, e.InvitedUserId }).IsUnique();
         });
 
         // TaskItem configuration

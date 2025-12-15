@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ToggleDarkMode } from '@/components/ui/ToggleDarkMode';
+import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { CheckSquare, Menu, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 
@@ -48,6 +49,8 @@ export function Navbar() {
                     {/* Right Side */}
                     <div className="flex items-center gap-4">
                         <ToggleDarkMode />
+
+                        {user && <NotificationsDropdown />}
 
                         {user ? (
                             <div className="hidden md:flex items-center gap-4">

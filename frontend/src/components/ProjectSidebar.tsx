@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { FolderOpen, Plus, ChevronRight, X } from 'lucide-react';
+import { FolderOpen, Plus, ChevronRight, X, Users } from 'lucide-react';
 import { api } from '@/lib/apiClient';
 import type { Project } from '@/types/todo';
 
@@ -18,6 +18,16 @@ export function ProjectSidebar({ projects, onProjectCreated }: ProjectSidebarPro
     const [isCreating, setIsCreating] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Listen for invitation accepted events to refresh projects
+    useEffect(() => {
+        const handleInvitationAccepted = () => {
+            onProjectCreated?.();
+        };
+
+        window.addEventListener('invitationAccepted', handleInvitationAccepted);
+        return () => window.removeEventListener('invitationAccepted', handleInvitationAccepted);
+    }, [onProjectCreated]);
 
     const handleCreateProject = async () => {
         if (!newProjectName.trim()) return;
@@ -111,6 +121,11 @@ export function ProjectSidebar({ projects, onProjectCreated }: ProjectSidebarPro
                                     style={{ backgroundColor: project.color || '#3b82f6' }}
                                 />
                                 <span className="truncate flex-1">{project.name}</span>
+                                {!project.isOwner && (
+                                    <span title="Shared project">
+                                        <Users className="w-3.5 h-3.5 text-gray-400" />
+                                    </span>
+                                )}
                                 <ChevronRight className="w-4 h-4 text-gray-400" />
                             </Link>
                         ))

@@ -33,6 +33,7 @@ export interface Project {
     isArchived: boolean;
     createdAt: string;
     updatedAt?: string;
+    isOwner?: boolean;
 }
 
 export interface CreateTaskDto {

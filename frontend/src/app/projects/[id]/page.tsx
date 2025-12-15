@@ -5,8 +5,9 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { TaskCard } from '@/components/TaskCard';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
+import { InviteModal } from '@/components/InviteModal';
 import { api } from '@/lib/apiClient';
-import { Plus, Search, Filter, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Filter, ArrowLeft, UserPlus } from 'lucide-react';
 import type { Task, Project } from '@/types/todo';
 
 export default function ProjectTasksPage() {
@@ -19,6 +20,7 @@ export default function ProjectTasksPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
     const fetchProjects = useCallback(async () => {
         try {
@@ -34,12 +36,34 @@ export default function ProjectTasksPage() {
 
         setLoading(true);
         try {
+            // Map numeric values to string values for status and priority
+            const statusMap: Record<number, string> = {
+                0: 'Todo',
+                1: 'InProgress',
+                2: 'InReview',
+                3: 'Done',
+                4: 'Cancelled'
+            };
+            const priorityMap: Record<number, string> = {
+                0: 'Low',
+                1: 'Medium',
+                2: 'High',
+                3: 'Urgent'
+            };
+
             const [projectRes, tasksRes] = await Promise.all([
                 api.getProject(projectId),
                 api.getTasks(projectId)
             ]);
             setProject(projectRes.data);
-            setTasks(tasksRes.data);
+            
+            // Transform tasks to use string status/priority
+            const transformedTasks = tasksRes.data.map((task: Task & { status: number | string; priority: number | string }) => ({
+                ...task,
+                status: typeof task.status === 'number' ? statusMap[task.status] : task.status,
+                priority: typeof task.priority === 'number' ? priorityMap[task.priority] : task.priority,
+            }));
+            setTasks(transformedTasks);
         } catch (error) {
             console.error('Failed to fetch project data:', error);
         } finally {
@@ -99,13 +123,22 @@ export default function ProjectTasksPage() {
                                 )}
                             </div>
                         </div>
-                        <Link 
-                            href={`/tasks/new?projectId=${projectId}`} 
-                            className="btn-primary inline-flex items-center gap-2"
-                        >
-                            <Plus className="w-5 h-5" />
-                            New Task
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setInviteModalOpen(true)}
+                                className="btn-secondary inline-flex items-center gap-2"
+                            >
+                                <UserPlus className="w-5 h-5" />
+                                Invite
+                            </button>
+                            <Link 
+                                href={`/tasks/new?projectId=${projectId}`} 
+                                className="btn-primary inline-flex items-center gap-2"
+                            >
+                                <Plus className="w-5 h-5" />
+                                New Task
+                            </Link>
+                        </div>
                     </div>
 
                     {/* Filters */}
@@ -186,6 +219,16 @@ export default function ProjectTasksPage() {
                     )}
                 </div>
             </div>
+
+            {/* Invite Modal */}
+            {project && (
+                <InviteModal
+                    projectId={projectId}
+                    projectName={project.name}
+                    isOpen={inviteModalOpen}
+                    onClose={() => setInviteModalOpen(false)}
+                />
+            )}
         </div>
     );
 }

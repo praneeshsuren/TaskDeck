@@ -6,9 +6,7 @@ using TaskDeck.Api.Models;
 
 namespace TaskDeck.Api.Services;
 
-/// <summary>
 /// Service for JWT token generation and validation
-/// </summary>
 public class JwtService
 {
     private readonly string _secretKey;
@@ -24,14 +22,10 @@ public class JwtService
         _expirationMinutes = int.Parse(configuration["Jwt:ExpirationInMinutes"] ?? "60");
     }
 
-    /// <summary>
     /// Get the expiration time for new tokens
-    /// </summary>
     public DateTime GetTokenExpiration() => DateTime.UtcNow.AddMinutes(_expirationMinutes);
 
-    /// <summary>
     /// Generate a JWT token for a user
-    /// </summary>
     public string GenerateToken(AppUser user)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));

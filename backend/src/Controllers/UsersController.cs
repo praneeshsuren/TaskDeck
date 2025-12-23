@@ -5,9 +5,7 @@ using TaskDeck.Api.Services;
 
 namespace TaskDeck.Api.Controllers;
 
-/// <summary>
 /// Controller for user management
-/// </summary>
 [ApiController]
 [Route("api/users")]
 [Authorize]
@@ -29,9 +27,7 @@ public class UsersController : ControllerBase
         return Guid.Parse(userIdClaim!);
     }
 
-    /// <summary>
     /// Get the current user's profile
-    /// </summary>
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser()
     {
@@ -44,9 +40,7 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
     /// Get a user by ID
-    /// </summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetUser(Guid id)
     {

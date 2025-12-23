@@ -4,9 +4,6 @@ using TaskDeck.Api.Models;
 
 namespace TaskDeck.Api.Services;
 
-/// <summary>
-/// Service for authentication operations - handles Firebase login and user management
-/// </summary>
 public class AuthService
 {
     private readonly AppDbContext _db;
@@ -20,9 +17,7 @@ public class AuthService
         _jwt = jwt;
     }
 
-    /// <summary>
     /// Authenticate a user with a Firebase ID token
-    /// </summary>
     public async Task<AuthResponse?> LoginWithFirebaseAsync(string idToken)
     {
         // Verify Firebase token
@@ -85,9 +80,7 @@ public class AuthService
         };
     }
 
-    /// <summary>
     /// Get user by ID
-    /// </summary>
     public async Task<UserDto?> GetUserByIdAsync(Guid userId)
     {
         var user = await _db.Users.FindAsync(userId);

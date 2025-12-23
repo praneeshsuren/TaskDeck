@@ -30,9 +30,7 @@ public class ProjectsController : ControllerBase
         return Guid.Parse(userIdClaim!);
     }
 
-    /// <summary>
     /// Get all projects for the current user
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetProjects()
     {
@@ -41,9 +39,7 @@ public class ProjectsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
     /// Get a project by ID
-    /// </summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetProject(Guid id)
     {
@@ -56,9 +52,7 @@ public class ProjectsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
     /// Create a new project
-    /// </summary>
     [HttpPost]
     public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto request)
     {
@@ -68,9 +62,7 @@ public class ProjectsController : ControllerBase
         return CreatedAtAction(nameof(GetProject), new { id = result.Id }, result);
     }
 
-    /// <summary>
     /// Update an existing project
-    /// </summary>
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateProject(Guid id, [FromBody] UpdateProjectDto request)
     {
@@ -84,9 +76,7 @@ public class ProjectsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
     /// Delete a project
-    /// </summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteProject(Guid id)
     {
